@@ -4,6 +4,7 @@ export default {
     subtitle: '收集光球与星星，躲避敌人追击！',
     namePlaceholder: '输入你的昵称',
     start: '开始游戏',
+    difficulty: '选择难度',
   },
   hud: {
     time: '时间',
@@ -12,7 +13,7 @@ export default {
     stars: '星星',
     gems: '水晶',
     enemies: '敌人',
-    controls: 'WASD / 方向键移动 · 鼠标瞄准 · 空格发射激光 · 收集所有光球、水晶和星星',
+    controls: '操作说明',
   },
   result: {
     win: '胜利！',
@@ -31,4 +32,21 @@ export default {
   },
   leaderboard: '排行榜',
   langToggle: 'English',
+  controls: {
+    title: '操作说明',
+    move: '移动角色',
+    aim: '鼠标瞄准',
+    shoot: '发射激光',
+    collectTitle: '收集目标',
+    orbs: '蓝色光球 10分',
+    gems: '绿色水晶 25分',
+    stars: '金色几何结 50分',
+    tip: '提示：连续命中敌人中心可造成暴击伤害（3倍）',
+    gotIt: '知道了',
+  },
+  difficulty: {
+    easy: '简单',
+    normal: '普通',
+    hard: '困难',
+  },
 }

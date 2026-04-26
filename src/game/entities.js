@@ -236,22 +236,28 @@ export function createStars(scene, positions) {
 /**
  * 生成追击敌人
  * 造型：20面体为主体，带旋转圆环，看起来像无人机
+ * @param {number} count - 敌人数量
  */
-export function createEnemies(scene) {
-  const colors = [
+export function createEnemies(scene, count = ENEMY_COUNT) {
+  const palette = [
     new Color3(1, 0.15, 0.15),   // 红
     new Color3(1, 0.4, 0),       // 橙
     new Color3(0.9, 0, 0.6),     // 紫红
+    new Color3(0.8, 0.2, 1),     // 紫
+    new Color3(0, 0.9, 0.8),     // 青
+    new Color3(1, 0.8, 0),       // 金
   ]
-  const spawns = [
-    new Vector3(-5, 0, -5),
-    new Vector3(5, 0, 5),
-    new Vector3(-4, 0, 6),
-  ]
+  // 在地图范围内用环形生成出生点
+  const spawns = Array.from({ length: count }, (_, i) => {
+    const angle = (i / count) * Math.PI * 2
+    const r = 3 + Math.random() * 2
+    return new Vector3(Math.cos(angle) * r, 0, Math.sin(angle) * r)
+  })
 
-  return colors.map((color, i) => {
+  return Array.from({ length: count }, (_, i) => {
     const group = []
     const pos = spawns[i]
+    const color = palette[i % palette.length]
 
     // 主体：二十面体
     const body = MeshBuilder.CreatePolyhedron(`enemyBody${i}`, {

@@ -4,6 +4,7 @@ export default {
     subtitle: 'Collect orbs, gems & stars, avoid the enemies!',
     namePlaceholder: 'Enter your name',
     start: 'Start Game',
+    difficulty: 'Select Difficulty',
   },
   hud: {
     time: 'TIME',
@@ -12,7 +13,7 @@ export default {
     stars: 'Stars',
     gems: 'Gems',
     enemies: 'Enemies',
-    controls: 'WASD / Arrow Keys to move · Mouse to aim · SPACE to fire laser · Collect all orbs, gems & stars',
+    controls: 'Controls',
   },
   result: {
     win: 'You Win!',
@@ -31,4 +32,21 @@ export default {
   },
   leaderboard: 'LEADERBOARD',
   langToggle: '中文',
+  controls: {
+    title: 'Controls',
+    move: 'Move Character',
+    aim: 'Mouse to Aim',
+    shoot: 'Fire Laser',
+    collectTitle: 'Collectibles',
+    orbs: 'Blue Orb 10pts',
+    gems: 'Green Gem 25pts',
+    stars: 'Gold Star 50pts',
+    tip: 'Tip: Hitting the enemy center deals critical damage (3x)',
+    gotIt: 'Got It',
+  },
+  difficulty: {
+    easy: 'Easy',
+    normal: 'Normal',
+    hard: 'Hard',
+  },
 }

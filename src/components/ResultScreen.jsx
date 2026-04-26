@@ -1,5 +1,5 @@
 // ============================================================
-// ResultScreen — 结算页面
+// ResultScreen — 结算页面（科技风）
 // ============================================================
 
 import { useI18n } from '../i18n/index.jsx'
@@ -12,65 +12,70 @@ export default function ResultScreen({ result, score, stats, time, lives, bonus,
   const baseScore = stats.orbs * 10 + stats.gems * 25 + stats.stars * 50
 
   return (
-    <div className="absolute inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl px-10 py-8 text-center shadow-2xl w-full max-w-sm mx-4">
-        <div className="text-4xl mb-2">{isWin ? '🎉' : '💀'}</div>
-        <h2 className="text-white text-2xl font-bold mb-1">
-          {isWin ? t('result.win') : t('result.gameover')}
-        </h2>
-        <p className="text-white/40 text-sm mb-4">
-          {isWin ? t('result.winDesc') : t('result.gameoverDesc')}
-        </p>
+    <div className="absolute inset-0 flex items-center justify-center bg-[#05080f]/80 backdrop-blur-sm">
+      <div className="relative w-full max-w-sm mx-4">
+        <div className="relative bg-[#0d1520]/95 backdrop-blur-md border border-[#1a3050]/60 rounded-xl px-10 py-8 text-center shadow-[0_0_40px_rgba(0,150,255,0.08),inset_0_0_40px_rgba(0,150,255,0.02)]">
+          {/* 顶部装饰 */}
+          <div className="absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent" />
 
-        <div className="bg-white/5 rounded-xl p-4 mb-6 space-y-1.5">
-          <div className="flex justify-between text-sm">
-            <span className="text-white/50">{t('result.finalScore')}</span>
-            <span className="text-cyan-300 font-bold text-lg">{score}</span>
+          {/* 标题区域 */}
+          <div className="mb-5">
+            <div className="text-3xl mb-2">{isWin ? '★' : '⚠'}</div>
+            <h2 className={`text-xl font-bold tracking-wider ${isWin ? 'text-transparent bg-gradient-to-b from-yellow-200 to-yellow-400 bg-clip-text' : 'text-red-400'}`}>
+              {isWin ? t('result.win') : t('result.gameover')}
+            </h2>
+            <p className="text-slate-500 text-xs mt-1">{isWin ? t('result.winDesc') : t('result.gameoverDesc')}</p>
           </div>
-          <div className="flex justify-between text-xs">
-            <span className="text-white/40">{t('result.baseScore')}</span>
-            <span className="text-white/70">{baseScore}</span>
-          </div>
-          {isWin && (
-            <div className="flex justify-between text-xs">
-              <span className="text-white/40">{t('result.timeBonus')}</span>
-              <span className="text-emerald-400 font-semibold">+{bonus}</span>
+
+          {/* 统计数据面板 */}
+          <div className="bg-[#0a121f]/80 border border-[#1a3050]/40 rounded-lg p-4 mb-5 space-y-1.5">
+            {/* 最终得分 */}
+            <div className="flex items-center justify-between pb-2 border-b border-[#1a3050]/30">
+              <span className="text-slate-500 text-xs tracking-wider">{t('result.finalScore')}</span>
+              <span className="text-cyan-300 font-mono font-bold text-xl tabular-nums">{score}</span>
             </div>
-          )}
-          <div className="flex justify-between text-xs">
-            <span className="text-white/40">{t('result.orbs')}</span>
-            <span className="text-white/70">{stats.orbs}/{ORB_COUNT}</span>
-          </div>
-          <div className="flex justify-between text-xs">
-            <span className="text-white/40">{t('result.gems')}</span>
-            <span className="text-white/70">{stats.gems}/{GEM_COUNT}</span>
-          </div>
-          <div className="flex justify-between text-xs">
-            <span className="text-white/40">{t('result.stars')}</span>
-            <span className="text-white/70">{stats.stars}/{STAR_COUNT}</span>
-          </div>
-          <div className="flex justify-between text-xs">
-            <span className="text-white/40">{t('result.time')}</span>
-            <span className="text-white/70">{time}s</span>
-          </div>
-          {isWin && (
-            <div className="flex justify-between text-xs">
-              <span className="text-white/40">{t('result.livesRemaining')}</span>
-              <span className="text-red-400">{lives}/{3}</span>
+
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs pt-1">
+              <ResultRow label={t('result.baseScore')} value={baseScore} valueClass="text-slate-300" />
+              {isWin && <ResultRow label={t('result.timeBonus')} value={`+${bonus}`} valueClass="text-emerald-400" />}
+              <ResultRow label={t('result.orbs')} value={`${stats.orbs}/${ORB_COUNT}`} valueClass="text-blue-400" />
+              <ResultRow label={t('result.gems')} value={`${stats.gems}/${GEM_COUNT}`} valueClass="text-green-400" />
+              <ResultRow label={t('result.stars')} value={`${stats.stars}/${STAR_COUNT}`} valueClass="text-yellow-400" />
+              <ResultRow label={t('result.time')} value={`${time}s`} valueClass="text-slate-300" />
+              {isWin && <ResultRow label={t('result.livesRemaining')} value={`${lives}/3`} valueClass="text-red-400" />}
             </div>
-          )}
+          </div>
+
+          {/* 排行榜 */}
+          <div className="mb-5">
+            <Leaderboard entries={leaderboard} />
+          </div>
+
+          {/* 返回按钮 */}
+          <button
+            onClick={onBack}
+            className="group relative w-full py-2.5 rounded-lg text-sm font-semibold tracking-widest
+                       border border-[#1a3050]/60 bg-[#0a121f]/80 text-slate-400 cursor-pointer
+                       transition-all duration-200 overflow-hidden
+                       hover:border-cyan-500/30 hover:text-cyan-400 hover:shadow-[0_0_20px_rgba(0,150,255,0.1)]"
+          >
+            <span className="relative z-10">{t('result.back')}</span>
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-500/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+          </button>
+
+          {/* 底部装饰 */}
+          <div className="absolute bottom-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent" />
         </div>
-
-        <Leaderboard entries={leaderboard} />
-
-        <button
-          onClick={onBack}
-          className="mt-4 bg-white/10 hover:bg-white/20 text-white px-6 py-2.5 rounded-lg
-                     transition-all duration-200 font-medium cursor-pointer border border-white/10 w-full"
-        >
-          {t('result.back')}
-        </button>
       </div>
+    </div>
+  )
+}
+
+function ResultRow({ label, value, valueClass }) {
+  return (
+    <div className="flex justify-between">
+      <span className="text-slate-600 text-[10px] tracking-wide">{label}</span>
+      <span className={`font-mono font-bold text-[11px] tabular-nums ${valueClass}`}>{value}</span>
     </div>
   )
 }

@@ -13,6 +13,7 @@ import {
   MAX_TIME_BONUS, TIME_BONUS_DECAY, INVINCIBLE_MS,
   COLLECT_DIST, ENEMY_HIT_DIST,
   LASER_SPEED, LASER_RANGE, LASER_COOLDOWN, ENEMY_RESPAWN_DELAY,
+  DIFFICULTY,
 } from '../game/constants'
 import {
   buildScene, buildWalls, createPlayer,
@@ -20,11 +21,15 @@ import {
   createLaser, spawnParticles, updateParticles,
 } from '../game/entities'
 
-export function useGame(canvasRef, playerName, gamePhase, callbacks) {
+export function useGame(canvasRef, playerName, difficulty, gamePhase, callbacks, paused) {
   const keysRef = useRef({})
+  const pausedRef = useRef(false)
   const engineRef = useRef(null)
   const sceneRef = useRef(null)
   const { onStateChange, onGameEnd } = callbacks
+  const diffCfg = DIFFICULTY[difficulty] || DIFFICULTY.normal
+  const effectiveEnemySpeed = ENEMY_SPEED * diffCfg.enemySpeedMul
+  pausedRef.current = paused
 
   useEffect(() => {
     if (gamePhase !== 'playing') return
@@ -36,6 +41,7 @@ export function useGame(canvasRef, playerName, gamePhase, callbacks) {
       lives: MAX_LIVES, score: 0,
       orbsCollected: 0, gemsCollected: 0, starsCollected: 0,
       elapsed: 0, isOver: false,
+      countdown: 3,  // 开始倒计时（秒）
     }
     const particles = []
     const lasers = []
@@ -71,7 +77,7 @@ export function useGame(canvasRef, playerName, gamePhase, callbacks) {
     const orbs = createOrbs(scene, usedPositions)
     const gems = createGems(scene, usedPositions)
     const stars = createStars(scene, usedPositions)
-    const enemies = createEnemies(scene)
+    const enemies = createEnemies(scene, diffCfg.enemyCount)
 
     // ---- 键盘 ----
     const keys = keysRef.current
@@ -105,6 +111,7 @@ export function useGame(canvasRef, playerName, gamePhase, callbacks) {
         lives: game.lives, score: game.score,
         time: Math.floor(game.elapsed),
         stats: { orbs: game.orbsCollected, gems: game.gemsCollected, stars: game.starsCollected },
+        countdown: game.countdown,
       })
     }
 
@@ -113,7 +120,21 @@ export function useGame(canvasRef, playerName, gamePhase, callbacks) {
     // ============================================================
     scene.registerBeforeRender(() => {
       if (game.isOver) return
+      if (pausedRef.current) {
+        updateParticles(scene, particles)
+        return
+      }
       const now = performance.now()
+
+      // ---- 开始倒计时：冻结所有游戏逻辑 ----
+      if (game.countdown > 0) {
+        game.countdown -= engine.getDeltaTime() / 1000
+        if (game.countdown < 0) game.countdown = 0
+        if (now - lastReactUpdate > 200) { lastReactUpdate = now; sync() }
+        updateParticles(scene, particles)
+        return
+      }
+
       game.elapsed += engine.getDeltaTime() / 1000
 
       if (now - lastReactUpdate > 200) { lastReactUpdate = now; sync() }
@@ -269,25 +290,50 @@ export function useGame(canvasRef, playerName, gamePhase, callbacks) {
         })
       }
 
-      // ---- 敌人 AI + 击中闪白消退 ----
-      enemies.forEach(e => {
+      // ---- 敌人 AI + 击中闪白消退 + 分离避免重叠 ----
+      enemies.forEach((e, i) => {
         // 闪白衰减
         if (e.flashFrames > 0) {
           e.flashFrames--
           if (e.flashFrames === 0 && e.alive) {
-            // 闪白消退后根据剩余血量恢复发光强度
             const intensity = 0.15 + (e.health / e.maxHealth) * 0.15
             e.bMat.emissiveColor = e.color.scale(intensity)
           }
         }
         if (!e.alive) return
+
+        // 追击方向（朝向玩家）
         const dir = player.position.subtract(e.root.position); dir.y = 0
         const dist = dir.length()
+
         if (dist > 0.3) {
           dir.normalize()
-          const speed = ENEMY_SPEED * (0.8 + 0.4 * Math.sin(now * 0.002 + e.root.uniqueId))
+
+          // 分离力：推开附近的其他敌人，防止堆叠
+          let sepX = 0, sepZ = 0
+          for (let j = 0; j < enemies.length; j++) {
+            if (i === j || !enemies[j].alive) continue
+            const d = Vector3.Distance(e.root.position, enemies[j].root.position)
+            if (d < 1.8 && d > 0.01) {
+              const pushDir = e.root.position.subtract(enemies[j].root.position)
+              sepX += pushDir.x / d
+              sepZ += pushDir.z / d
+            }
+          }
+
+          // 融合追击方向 + 分离力
+          let moveX = dir.x + sepX * 2.0
+          let moveZ = dir.z + sepZ * 2.0
+          const moveLen = Math.sqrt(moveX * moveX + moveZ * moveZ)
+          if (moveLen > 0.01) {
+            moveX /= moveLen
+            moveZ /= moveLen
+          }
+
+          const speed = effectiveEnemySpeed * (0.8 + 0.4 * Math.sin(now * 0.002 + e.root.uniqueId))
           e.meshes.forEach(m => {
-            m.position.x += dir.x * speed; m.position.z += dir.z * speed
+            m.position.x += moveX * speed
+            m.position.z += moveZ * speed
           })
           const lim = MAP_SIZE + 0.3
           e.meshes.forEach(m => {
@@ -295,6 +341,7 @@ export function useGame(canvasRef, playerName, gamePhase, callbacks) {
             m.position.z = Math.max(-lim, Math.min(lim, m.position.z))
           })
         }
+        // 始终面朝玩家
         e.root.rotation.y = Math.atan2(dir.x, dir.z)
       })
 
